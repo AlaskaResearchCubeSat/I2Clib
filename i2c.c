@@ -5,6 +5,11 @@
 //mutex for I2C resource
 static CTL_MUTEX_t I2C_mutex;
 
+//release the I2C bus
+static release_I2C_bus(void){
+  ctl_mutex_unlock(&I2C_mutex);
+}
+
 //reserve the I2C bus so no one else can use it
 static unsigned I2C_lock(void){
   int i;
@@ -26,10 +31,6 @@ static unsigned I2C_lock(void){
   return 0;
 }
 
-//release the I2C bus
-static release_I2C_bus(void){
-  ctl_mutex_unlock(&I2C_mutex);
-}
 
 //transmit len bytes pointed to by dat to address addr over i2c
 short i2c_tx(unsigned short addr,const unsigned char *dat,unsigned short len){
