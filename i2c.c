@@ -78,7 +78,7 @@ short i2c_tx(unsigned short addr,const unsigned char *dat,unsigned short len){
     //return error
     if(e&I2C_EV_ERR_NACK){
       //NACK by slave
-      return I2C_ERRR_NACK;
+      return I2C_ERR_NACK;
     }else{
       //events wait timed out
       return I2C_ERR_TIMEOUT;
@@ -151,7 +151,7 @@ short i2c_rxtx(unsigned short addr,unsigned char *rx,unsigned short rxLen,const 
     //return error
     if(e&I2C_EV_ERR_NACK){
       //NACK by slave
-      return I2C_ERRR_NACK;
+      return I2C_ERR_NACK;
     }else{
       //events wait timed out
       return I2C_ERR_TIMEOUT;
@@ -213,7 +213,7 @@ short i2c_txrx(unsigned short addr,const unsigned char *tx,unsigned short txLen,
     //return error
     if(e&I2C_EV_ERR_NACK){
       //NACK by slave
-      return I2C_ERRR_NACK;
+      return I2C_ERR_NACK;
     }else{
       //events wait timed out
       return I2C_ERR_TIMEOUT;
@@ -278,7 +278,7 @@ short i2c_rx(unsigned short addr,unsigned char *dat,unsigned short len){
     //return error
     if(e&I2C_EV_ERR_NACK){
       //NACK by slave
-      return I2C_ERRR_NACK;
+      return I2C_ERR_NACK;
     }else{
       //events wait timed out
       return I2C_ERR_TIMEOUT;

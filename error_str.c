@@ -9,7 +9,7 @@ const char *I2C_error_str(int error){
   }
   //check for error
   switch(error){
-    case I2C_ERRR_NACK:
+    case I2C_ERR_NACK:
       return "ERROR NACK";
     case I2C_ERR_TIMEOUT:
       return "ERROR TIME OUT";
