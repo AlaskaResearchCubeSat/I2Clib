@@ -48,7 +48,7 @@ short i2c_rxtx(unsigned short addr,unsigned char *rx,unsigned short rxLen,const 
 //Transmit then recieve I2C data
 short i2c_txrx(unsigned short addr,const unsigned char *tx,unsigned short txLen,unsigned char *rx,unsigned short rxLen);
 //Setup I2C interface
-void initI2C(void);
+void initI2C(unsigned int port,unsigned int sda,unsigned int scl);
 //bit-bang I2C bus to try to force a slave to let go
 void I2C_reset(void);
 //return error strings for error code

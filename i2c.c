@@ -50,11 +50,11 @@ short i2c_tx(unsigned short addr,const unsigned char *dat,unsigned short len){
   //set transmit mode
   UCB1CTL1|=UCTR;
   //clear TX interrupt flag
-  UC1IFG&=~UCB1TXIFG;
+  UCB1IFG&=~UCTXIFG;
   //disable RX interrupt
-  UC1IE&=~UCB1RXIE;
+  UCB1IE&=~UCRXIE;
   //enable TX interrupt
-  UC1IE|= UCB1TXIE;
+  UCB1IE|= UCTXIE;
   //set index
   I2C_stat.tx.idx=0;
   //clear I2C events
@@ -105,11 +105,11 @@ short i2c_rxtx(unsigned short addr,unsigned char *rx,unsigned short rxLen,const 
    //set receive mode
   UCB1CTL1&=~UCTR;
   //clear RX interrupt flag
-  UC1IFG&=~UCB1RXIFG;
+  UCB1IFG&=~UCRXIFG;
   //disable TX interrupt
-  UC1IE&=~UCB1TXIE;
+  UCB1IE&=~UCTXIE;
   //enable RX interrupt
-  UC1IE|= UCB1RXIE;
+  UCB1IE|= UCRXIE;
   //set index
   I2C_stat.rx.idx=0;
   I2C_stat.tx.idx=0;
@@ -178,11 +178,11 @@ short i2c_txrx(unsigned short addr,const unsigned char *tx,unsigned short txLen,
    //set transmit mode
   UCB1CTL1|=UCTR;
   //clear TX interrupt flag
-  UC1IFG&=~UCB1TXIFG;
+  UCB1IFG&=~UCTXIFG;
   //disable RX interrupt
-  UC1IE&=~UCB1RXIE;
+  UCB1IE&=~UCRXIE;
   //enable TX interrupt
-  UC1IE|= UCB1TXIE;
+  UCB1IE|= UCTXIE;
   //set index
   I2C_stat.rx.idx=0;
   I2C_stat.tx.idx=0;
@@ -240,11 +240,11 @@ short i2c_rx(unsigned short addr,unsigned char *dat,unsigned short len){
   //set receive mode
   UCB1CTL1&=~UCTR;
   //clear RX interrupt flag
-  UC1IFG&=~UCB1RXIFG;
+  UCB1IFG&=~UCRXIFG;
   //disable TX interrupt
-  UC1IE&=~UCB1TXIE;
+  UCB1IE&=~UCTXIE;
   //enable RX interrupt
-  UC1IE|= UCB1RXIE;
+  UCB1IE|= UCRXIE;
   //set index
   I2C_stat.rx.idx=0;
   //clear I2C events
@@ -287,7 +287,7 @@ short i2c_rx(unsigned short addr,unsigned char *dat,unsigned short len){
   }
 }
 
-
+/*
 //generate a clock on the I2C bus
 //clock frequency is about 10kHz
 void I2C_clk(void){
@@ -334,9 +334,10 @@ void I2C_reset(void){
   }//if SDA is not stuck low then SCL must be which means we are SOL
   //clock and data pins as I2C function
   P5SEL|=BIT1|BIT2;
-}
+}*/
 
-void initI2C(void){
+void initI2C(unsigned int port,unsigned int sda,unsigned int scl){
+  volatile unsigned char *port_sel,*base_map;
   //init mutex
   ctl_mutex_init(&I2C_mutex);
   //put UCB1 into reset state
@@ -347,8 +348,37 @@ void initI2C(void){
   //set baud rate to 50kB/s off of 16MHz SMCLK
   UCB1BR0=0x40;
   UCB1BR1=0x01;
-  //configure ports
-  P5SEL|=BIT1|BIT2;
+    //check port and pins for validity
+  if(port>=2 && port<=4 && sda<8 && scl<8){
+    switch(port){
+      case 2:
+        port_sel=&P2SEL0;
+        base_map=&P2MAP0;
+      break;
+      case 3:
+        port_sel=&P4SEL0;
+        base_map=&P4MAP0;
+      break;
+      case 4:
+        port_sel=&P4SEL0;
+        base_map=&P4MAP0;
+      break;
+    }
+    //unlock port maping
+    PMAPKEYID=PMAPKEY;
+    //allow reconfiguration
+    PMAPCTL|=PMAPRECFG;
+    //setup port mapping for sda pin
+    base_map[sda]=PM_UCB1SDA;
+    //select pin special function
+    *port_sel|=1<<sda;
+    //setup port mapping for sck pin
+    base_map[scl]=PM_UCB1SCL;
+    //select pin special function
+    *port_sel|=1<<scl;
+    //lock port maping
+    PMAPKEYID=0;
+  }
   //bring UCB1 out of reset state
   UCB1CTL1&=~UCSWRST;
   //check if bus is busy
@@ -357,5 +387,5 @@ void initI2C(void){
     I2C_reset();
   }
   //enable not-acknowledge interrupt
-  UCB1I2CIE|=UCNACKIE;
+  UCB1IE|=UCNACKIE;
 }

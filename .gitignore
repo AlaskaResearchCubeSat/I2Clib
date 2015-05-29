@@ -3,5 +3,5 @@
 *.hzs
 
 #build directories
-MSP430 Debug/
-MSP430 Release/
+I2CLib MSP430 Debug/
+I2CLib MSP430 Release/
