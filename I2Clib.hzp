@@ -1,7 +1,7 @@
 <!DOCTYPE CrossStudio_Project_File>
 <solution Name="I2Clib" target="9" version="2">
   <project Name="I2Clib">
-    <configuration Name="Common" batch_build_configurations="MSP430 Debug;MSP430 Release" project_directory="" project_type="Library"/>
+    <configuration Name="Common" libctl="Yes" batch_build_configurations="MSP430 Debug;MSP430 Release" project_directory="" project_type="Library"/>
     <folder Name="Source Files">
       <configuration Name="Common" filter="c;h;s;asm;inc;s43"/>
       <file file_name="i2c.c"/>
