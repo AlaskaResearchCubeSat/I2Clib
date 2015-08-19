@@ -48,13 +48,7 @@ short i2c_tx(unsigned short addr,const unsigned char *dat,unsigned short len){
   //set slave address
   UCB1I2CSA=addr;
   //set transmit mode
-  UCB1CTL1|=UCTR;
-  //clear TX interrupt flag
-  UCB1IFG&=~UCTXIFG;
-  //disable RX interrupt
-  UCB1IE&=~UCRXIE;
-  //enable TX interrupt
-  UCB1IE|= UCTXIE;
+  UCB1CTLW0|=UCTR;
   //set index
   I2C_stat.tx.idx=0;
   //clear I2C events
@@ -66,7 +60,7 @@ short i2c_tx(unsigned short addr,const unsigned char *dat,unsigned short len){
   //set data
   I2C_stat.tx.ptr=(unsigned char*)dat;
   //generate start condition
-  UCB1CTL1|=UCTXSTT;
+  UCB1CTLW0|=UCTXSTT;
   //wait for transaction to complete
   e=ctl_events_wait(CTL_EVENT_WAIT_ANY_EVENTS_WITH_AUTO_CLEAR,&I2C_stat.events,I2C_EV_ALL,CTL_TIMEOUT_DELAY,5);
   //release I2C lock
@@ -103,13 +97,7 @@ short i2c_rxtx(unsigned short addr,unsigned char *rx,unsigned short rxLen,const 
   //set slave address
   UCB1I2CSA=addr;
    //set receive mode
-  UCB1CTL1&=~UCTR;
-  //clear RX interrupt flag
-  UCB1IFG&=~UCRXIFG;
-  //disable TX interrupt
-  UCB1IE&=~UCTXIE;
-  //enable RX interrupt
-  UCB1IE|= UCRXIE;
+  UCB1CTLW0&=~UCTR;
   //set index
   I2C_stat.rx.idx=0;
   I2C_stat.tx.idx=0;
@@ -128,13 +116,13 @@ short i2c_rxtx(unsigned short addr,unsigned char *rx,unsigned short rxLen,const 
   //clear I2C events
   ctl_events_set_clear(&I2C_stat.events,0,I2C_EV_ALL);
   //generate start condition
-  UCB1CTL1|=UCTXSTT;
+  UCB1CTLW0|=UCTXSTT;
   //one byte packets are special
   if(rxLen==1){
     //wait for address to be sent
-    while(UCB1CTL1&UCTXSTT);
+    while(UCB1CTLW0&UCTXSTT);
     //transmit repeated start
-    UCB1CTL1|=UCTXSTT;
+    UCB1CTLW0|=UCTXSTT;
     //go to LPM0 for Tx      
     //wait for transaction to complete
     e=ctl_events_wait(CTL_EVENT_WAIT_ANY_EVENTS_WITH_AUTO_CLEAR,&I2C_stat.events,I2C_EV_ALL,CTL_TIMEOUT_DELAY,5);
@@ -176,13 +164,7 @@ short i2c_txrx(unsigned short addr,const unsigned char *tx,unsigned short txLen,
   //set slave address
   UCB1I2CSA=addr;
    //set transmit mode
-  UCB1CTL1|=UCTR;
-  //clear TX interrupt flag
-  UCB1IFG&=~UCTXIFG;
-  //disable RX interrupt
-  UCB1IE&=~UCRXIE;
-  //enable TX interrupt
-  UCB1IE|= UCTXIE;
+  UCB1CTLW0|=UCTR;
   //set index
   I2C_stat.rx.idx=0;
   I2C_stat.tx.idx=0;
@@ -201,7 +183,7 @@ short i2c_txrx(unsigned short addr,const unsigned char *tx,unsigned short txLen,
   //clear I2C events
   ctl_events_set_clear(&I2C_stat.events,0,I2C_EV_ALL);
   //generate start condition
-  UCB1CTL1|=UCTXSTT;
+  UCB1CTLW0|=UCTXSTT;
   //go to low power mode while transaction completes
   e=ctl_events_wait(CTL_EVENT_WAIT_ANY_EVENTS_WITH_AUTO_CLEAR,&I2C_stat.events,I2C_EV_ALL,CTL_TIMEOUT_DELAY,5);
   //release I2C lock
@@ -238,13 +220,7 @@ short i2c_rx(unsigned short addr,unsigned char *dat,unsigned short len){
   //set slave address
   UCB1I2CSA=addr;
   //set receive mode
-  UCB1CTL1&=~UCTR;
-  //clear RX interrupt flag
-  UCB1IFG&=~UCRXIFG;
-  //disable TX interrupt
-  UCB1IE&=~UCTXIE;
-  //enable RX interrupt
-  UCB1IE|= UCRXIE;
+  UCB1CTLW0&=~UCTR;
   //set index
   I2C_stat.rx.idx=0;
   //clear I2C events
@@ -256,13 +232,13 @@ short i2c_rx(unsigned short addr,unsigned char *dat,unsigned short len){
   //set data
   I2C_stat.rx.ptr=dat;
   //generate start condition
-  UCB1CTL1|=UCTXSTT;
+  UCB1CTLW0|=UCTXSTT;
   //one byte packets are special
   if(len==1){
     //wait for address to be sent
-    while(UCB1CTL1&UCTXSTT);
+    while(UCB1CTLW0&UCTXSTT);
     //transmit stop
-    UCB1CTL1|=UCTXSTP;
+    UCB1CTLW0|=UCTXSTP;
     //wait for transaction to complete
     e=ctl_events_wait(CTL_EVENT_WAIT_ANY_EVENTS_WITH_AUTO_CLEAR,&I2C_stat.events,I2C_EV_ALL,CTL_TIMEOUT_DELAY,10);
   }else{    
@@ -341,13 +317,11 @@ void initI2C(unsigned int port,unsigned int sda,unsigned int scl){
   //init mutex
   ctl_mutex_init(&I2C_mutex);
   //put UCB1 into reset state
-  UCB1CTL1=UCSWRST;
+  UCB1CTLW0|=UCSWRST;
   //setup registers
-  UCB1CTL0=UCMST|UCMODE_3|UCSYNC;
-  UCB1CTL1|=UCSSEL_2;
-  //set baud rate to 50kB/s off of 16MHz SMCLK
-  UCB1BR0=0x40;
-  UCB1BR1=0x01;
+  UCB1CTLW0=UCMST|UCMODE_3|UCSYNC|UCSSEL_2|UCSWRST;
+  //set baud rate to 50kB/s off of 19.99MHz SMCLK
+  UCB1BRW=400;
     //check port and pins for validity
   if(port>=2 && port<=4 && sda<8 && scl<8){
     switch(port){
@@ -380,12 +354,7 @@ void initI2C(unsigned int port,unsigned int sda,unsigned int scl){
     PMAPKEYID=0;
   }
   //bring UCB1 out of reset state
-  UCB1CTL1&=~UCSWRST;
-  //check if bus is busy
-  if(UCB1STAT&UCBBUSY){
-    //bit bang the bus until no device has hold of it
-    I2C_reset();
-  }
+  UCB1CTLW0&=~UCSWRST;
   //enable not-acknowledge interrupt
-  UCB1IE|=UCNACKIE;
+  UCB1IE|=UCNACKIE|UCTXIE0|UCRXIE0|UCCLTOIFG;
 }

@@ -18,10 +18,8 @@ void I2C_dat(void) __ctl_interrupt[USCI_B1_VECTOR]{
       //clear interrupt flag
       UCB1STAT&=~UCNACKIFG;
 #ifndef SCCB
-      //disable I2C Tx and Rx Interrupts
-      UCB1IE&=~(UCTXIE|UCRXIE);
       //generate stop condition
-      UCB1CTL1|=UCTXSTP;
+      UCB1CTLW0|=UCTXSTP;
 #endif
     return;
     case USCI_I2C_UCRXIFG0:
@@ -33,14 +31,12 @@ void I2C_dat(void) __ctl_interrupt[USCI_B1_VECTOR]{
       if(I2C_stat.rx.len==(I2C_stat.rx.idx+1)){
         if(I2C_stat.mode==I2C_RXTX){
           //set transmit mode
-          UCB1CTL1|=UCTR;
+          UCB1CTLW0|=UCTR;
           //generate repeated start condition
-          UCB1CTL1|=UCTXSTT;
-          //enable Tx interrupt
-          UCB1IE|= UCTXIE;
+          UCB1CTLW0|=UCTXSTT;
         }else{
           //generate stop condition
-          UCB1CTL1|=UCTXSTP;
+          UCB1CTLW0|=UCTXSTP;
         }
         //one more interrupt to go
       }
@@ -58,15 +54,9 @@ void I2C_dat(void) __ctl_interrupt[USCI_B1_VECTOR]{
       }else{
         if(I2C_stat.mode==I2C_TXRX){
           //set receive mode
-          UCB1CTL1&=~UCTR;
+          UCB1CTLW0&=~UCTR;
           //generate start condition
-          UCB1CTL1|=UCTXSTT;
-          //clear interrupt flag
-          UCB1IFG&= ~UCTXIFG;
-          //clear Tx enable
-          UCB1IE&= ~UCTXIE;
-          //enable Rx interrupt
-          UCB1IE|= UCRXIE;
+          UCB1CTLW0|=UCTXSTT;
           //one byte receive needs special treatment
           if(I2C_stat.rx.len==1){
             //set complete event
@@ -74,9 +64,7 @@ void I2C_dat(void) __ctl_interrupt[USCI_B1_VECTOR]{
           }
         }else{
           //generate stop condition
-          UCB1CTL1|=UCTXSTP;
-          //clear interrupt flag
-          UCB1IFG&= ~UCTXIFG;
+          UCB1CTLW0|=UCTXSTP;
           //set complete event
           ctl_events_set_clear(&I2C_stat.events,I2C_EV_COMPLETE,0);
         }
